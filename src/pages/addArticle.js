@@ -23,6 +23,12 @@ function AddArticle(props) {
 
   useEffect(() => {
     getTypeInfo()
+    // 获取文章id
+    let tmpId = props.match.params.id
+    if(tmpId) {
+      setArticleId(tmpId)
+      getArticleById(tmpId)
+    }
   }, [])
 
   marked.setOptions({
@@ -127,17 +133,31 @@ function AddArticle(props) {
 
   }
 
+  const getArticleById = (id) => {
+    axios(servicePath.getArticleById+id, {withCredentials:true, header:{ 'Access-Control-Allow-Origin':'*' }}).then((res) => {
+      setArticleTitle(res.data.data[0].title)
+      setArticleContent(res.data.data[0].article_content)
+      let html=marked(res.data.data[0].article_content)
+      setMarkdownContent(html)
+      setIntroducemd(res.data.data[0].introduce)
+      let tmpInt = marked(res.data.data[0].introduce)
+      setIntroducehtml(tmpInt)
+      setShowDate(res.data.data[0].addTime)
+      setSelectType(res.data.data[0].typeId)
+    })
+  }
+
   return (
     <div>
       <Row gutter={5}>
         <Col span={18}>
           <Row gutter={10}>
               <Col span={20}>
-                <Input placeholder="博客标题" size="large" onChange={e => {setArticleTitle(e.target.value)}}/>
+                <Input placeholder="博客标题" size="large" value={articleTitle} onChange={e => {setArticleTitle(e.target.value)}}/>
               </Col>
               <Col span={4}>
                 &nbsp;
-                <Select defaultValue={selectedType} size="large" style={{ width: 120 }} onChange={selectTypeHandler}>
+                <Select defaultValue={selectedType} value={selectedType} size="large" style={{ width: 120 }} onChange={selectTypeHandler}>
                   {
                     typeInfo.map((item,index) => {
                       return (
@@ -154,6 +174,7 @@ function AddArticle(props) {
               <TextArea
                 className='markdown-content'
                 rows={35}
+                value={articleContent}
                 placeholder='文章内容'
                 onChange={changeContent} />
             </Col>
@@ -173,7 +194,7 @@ function AddArticle(props) {
             </Col>
             <Col span={24}>
               <br />
-              <TextArea rows={4} placeholder='文章简介' onChange={changeIntroduce}>
+              <TextArea rows={4} value={introducemd} placeholder='文章简介' onChange={changeIntroduce}>
 
               </TextArea>
               <br /><br />
